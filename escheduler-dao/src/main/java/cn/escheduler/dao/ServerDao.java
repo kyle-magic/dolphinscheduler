@@ -32,7 +32,7 @@ import static cn.escheduler.dao.datasource.ConnectionFactory.getMapper;
 public class ServerDao extends AbstractBaseDao {
 
     @Autowired
-    MasterServerMapper masterServerMapper;
+    MasterServerMapper masterServerMapper;          // todo:看看Mapper的实现
 
 
     @Autowired

@@ -119,43 +119,44 @@ public class MasterServer implements CommandLineRunner, IStoppable {
 
     public MasterServer(ProcessDao processDao){
         zkMasterClient = ZKMasterClient.getZKMasterClient(processDao);
-        this.serverDao = zkMasterClient.getServerDao();
+        this.serverDao = zkMasterClient.getServerDao();             //todo：zk中是如何记录 serverDao 信息的
         this.alertDao = zkMasterClient.getAlertDao();
     }
     public void run(ProcessDao processDao){
 
-        // heartbeat interval
+        // heartbeat interval    获取心跳数
         heartBeatInterval = conf.getInt(Constants.MASTER_HEARTBEAT_INTERVAL,
                 Constants.defaultMasterHeartbeatInterval);
 
+        //创建一个 线程池，用于做心跳
         heartbeatMasterService = ThreadUtils.newDaemonThreadScheduledExecutor("Master-Main-Thread",Constants.defaulMasterHeartbeatThreadNum);
 
-        // heartbeat thread implement
+        // heartbeat thread implement 创建心跳的 Runnable
         Runnable heartBeatThread = heartBeatThread();
 
-        zkMasterClient.setStoppable(this);
+        zkMasterClient.setStoppable(this);        //当前实例的句柄给到 zkMasterClient
 
-        // regular heartbeat
+        // regular heartbeat        //发起心跳调度
         // delay 5 seconds, send heartbeat every 30 seconds
         heartbeatMasterService.
                 scheduleAtFixedRate(heartBeatThread, 5, heartBeatInterval, TimeUnit.SECONDS);
 
-        // master exec thread pool num
+        // master exec thread pool num      //master 执行线程的数量
         int masterExecThreadNum = conf.getInt(Constants.MASTER_EXEC_THREADS,
                 Constants.defaultMasterExecThreadNum);
 
-        // master scheduler thread
+        // master scheduler thread        //todo:master调度，用来做什么
         MasterSchedulerThread masterSchedulerThread = new MasterSchedulerThread(
                 zkMasterClient,
                 processDao,conf,
                 masterExecThreadNum);
 
         // submit master scheduler thread
-        masterSchedulerService.execute(masterSchedulerThread);
+        masterSchedulerService.execute(masterSchedulerThread);      //todo: 只执行一次，为什么要用线程池
 
         // start QuartzExecutors
         try {
-            ProcessScheduleJob.init(processDao);
+            ProcessScheduleJob.init(processDao);                      //
             QuartzExecutors.getInstance().start();
         } catch (Exception e) {
             try {
