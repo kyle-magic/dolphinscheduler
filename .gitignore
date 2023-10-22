@@ -1,0 +1,5 @@
+*.iml
+target/
+escheduler-ui/node_modules
+/target/escheduler-1.0.0-SNAPSHOT/conf/mail_templates/alert_mail_template.ftl
+.idea/

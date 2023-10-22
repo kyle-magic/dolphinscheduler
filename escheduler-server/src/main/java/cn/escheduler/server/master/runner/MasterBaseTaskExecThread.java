@@ -34,6 +34,7 @@ import java.util.concurrent.Callable;
 
 /**
  * master task exec base class
+ * 在 MasterExecThread 中调用
  */
 public class MasterBaseTaskExecThread implements Callable<Boolean> {
 

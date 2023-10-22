@@ -124,14 +124,14 @@ public class MasterServer implements CommandLineRunner, IStoppable {
     }
     public void run(ProcessDao processDao){
 
-        // heartbeat interval    获取心跳数
+        // heartbeat interval    获取心跳间隔
         heartBeatInterval = conf.getInt(Constants.MASTER_HEARTBEAT_INTERVAL,
                 Constants.defaultMasterHeartbeatInterval);
 
         //创建一个 线程池，用于做心跳
         heartbeatMasterService = ThreadUtils.newDaemonThreadScheduledExecutor("Master-Main-Thread",Constants.defaulMasterHeartbeatThreadNum);
 
-        // heartbeat thread implement 创建心跳的 Runnable
+        // 向zk的心跳
         Runnable heartBeatThread = heartBeatThread();
 
         zkMasterClient.setStoppable(this);        //当前实例的句柄给到 zkMasterClient
@@ -145,18 +145,20 @@ public class MasterServer implements CommandLineRunner, IStoppable {
         int masterExecThreadNum = conf.getInt(Constants.MASTER_EXEC_THREADS,
                 Constants.defaultMasterExecThreadNum);
 
-        // master scheduler thread        //todo:master调度，用来做什么
+        // master scheduler thread        //todo: MasterSchedulerThread 在做什么事情
         MasterSchedulerThread masterSchedulerThread = new MasterSchedulerThread(
                 zkMasterClient,
                 processDao,conf,
                 masterExecThreadNum);
 
         // submit master scheduler thread
-        masterSchedulerService.execute(masterSchedulerThread);      //todo: 只执行一次，为什么要用线程池
+        //只执行一次，为什么用线程池？ Runnalb里面加了死循环
+        //todo:一个线程一直死循环，放到队列和不放队列有什么区别
+        masterSchedulerService.execute(masterSchedulerThread);
 
         // start QuartzExecutors
         try {
-            ProcessScheduleJob.init(processDao);                      //
+            ProcessScheduleJob.init(processDao);                      // todo 看看Quartz的用法
             QuartzExecutors.getInstance().start();
         } catch (Exception e) {
             try {

@@ -34,6 +34,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  *  master scheduler thread
+ *  在MasterServer调用
+ *
+ *  DESC：遍历 command 表 -> 将 command 转成 ProcessInstance，
+ *  并 发起一次工作流调用 masterExecService.execute(new MasterExecThread(processInstance))
  */
 public class MasterSchedulerThread implements Runnable {
 
@@ -64,7 +68,7 @@ public class MasterSchedulerThread implements Runnable {
 
     @Override
     public void run() {
-        while (Stopper.isRunning()){
+        while (Stopper.isRunning()){        //一直占据线程执行
 
             // process instance
             ProcessInstance processInstance = null;
@@ -74,7 +78,7 @@ public class MasterSchedulerThread implements Runnable {
 
                 if(OSUtils.checkResource(conf, true)){
                     if (zkMasterClient.getZkClient().getState() == CuratorFrameworkState.STARTED) {
-
+                        //抢 分布式锁，成为active master
                         // create distributed lock with the root node path of the lock space as /escheduler/lock/failover/master
                         String znodeLock = zkMasterClient.getMasterLockPath();
 
@@ -84,6 +88,7 @@ public class MasterSchedulerThread implements Runnable {
                         ThreadPoolExecutor poolExecutor = (ThreadPoolExecutor) masterExecService;
                         int activeCount = poolExecutor.getActiveCount();
                         // make sure to scan and delete command  table in one transaction
+                        //一个 Command 代表了要执行一次工作流，拿到后创建 ProcessInstance，删除该command
                         processInstance = processDao.scanCommand(logger, OSUtils.getHost(), this.masterExecThreadNum - activeCount);
                         if (processInstance != null) {
                             logger.info("start master exex thread , split DAG ...");

@@ -127,14 +127,14 @@ public class ProcessDao extends AbstractBaseDao {
     public ProcessInstance scanCommand(Logger logger, String host, int vaildThreadNum){
 
         ProcessInstance processInstance = null;
-        Command command = findOneCommand();
+        Command command = findOneCommand();             //todo 找到Command的数据来源
 
         if (command == null) {
             return null;
         }
         logger.info(String.format("find one command: id: %d, type: %s", command.getId(),command.getCommandType().toString()));
 
-        processInstance = constructProcessInstance(command, host);
+        processInstance = constructProcessInstance(command, host);   //Command 和 host共同构建 实例   todo：
 
         //cannot construct process instance, return null;
         if(processInstance == null){
@@ -299,6 +299,7 @@ public class ProcessDao extends AbstractBaseDao {
 
     /**
      * calculate sub process number in the process define.
+     * 有下级 工作流，会导致递归，就需要更多的线程来执行
      * @param processDefinitionId
      * @return
      */

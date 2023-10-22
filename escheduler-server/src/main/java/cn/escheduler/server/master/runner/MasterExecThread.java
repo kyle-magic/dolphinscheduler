@@ -51,7 +51,13 @@ import java.util.concurrent.Future;
 import static cn.escheduler.common.Constants.*;
 
 /**
- * master exec thread,split dag
+ * master exec thread,split dag   拆分DAG
+ * 在 MasterSchedulerThread 中调用
+ *
+ * 执行当前的 ProcessInstance，
+ * 渲染 process 的DAG，并遍历DAG执行，执行某个task就是将其提交到
+ *         abstractExecThread = new MasterTaskExecThread(taskInstance, processInstance);
+ *         Future<Boolean> future = taskExecService.submit(abstractExecThread);
  */
 public class MasterExecThread implements Runnable {
 
@@ -134,10 +140,10 @@ public class MasterExecThread implements Runnable {
         try {
             if (processInstance.isComplementData() &&  Flag.NO == processInstance.getIsSubProcess()){
                 // sub process complement data
-                executeComplementProcess();
+                executeComplementProcess();     //补数
             }else{
                 // execute flow
-                executeProcess();
+                executeProcess();               //执行
             }
         }catch (Exception e){
             logger.error("master exec thread exception: " + e.getMessage(), e);
